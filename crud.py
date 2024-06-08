@@ -15,36 +15,39 @@ class Cliente:
         ROOT_PATH = Path(__file__).parent
         conn = sqlite3.connect(ROOT_PATH / "loja.db")
         cursor = conn.cursor()
-        #if self.id is None:
         try:
             cursor.execute('INSERT INTO clientes (nome, primeiroNome, cpf, contatos, dataNascimento, versao) VALUES(?, ?, ?, ?, ?, ?)', (self.nome, self.primeiroNome, self.cpf, self.contatos, self.dataNascimento, self.versao))
-            print(self.nome)
+            self.id = cursor.lastrowid
             conn.commit()
             conn.close()
         except Exception as e:
             print(e)
-        #self.id = cursor.lastrowid
-        # else:
-        #     cursor.execute('UPDATE clientes SET nome = ?, primeiroNome = ?, cpf = ?, contatos = ? dataNascimento = ?, versao = ? WHERE id = ?', (self.nome, self.primeiroNome, self.cpf, self.contatos, self.dataNascimento, self.versao, self.id))
-        
+    
+    def update(self, id):
+        ROOT_PATH = Path(__file__).parent
+        conn = sqlite3.connect(ROOT_PATH / "loja.db")
+        cursor = conn.cursor()
+        # cursor.execute('UPDATE clientes SET nome = ?, primeiroNome = ?, cpf = ?, contatos = ? dataNascimento = ?, versao = ? WHERE id = ?', (self.nome, self.primeiroNome, self.cpf, self.contatos, self.dataNascimento, self.versao, id))
+        # o update não aceitou atualizar o campo dataNascimento, não sei o motivo ainda
+        cursor.execute('UPDATE clientes SET nome = ?, primeiroNome = ?, cpf = ?, contatos = ?, versao = ? WHERE id = ?', (self.nome, self.primeiroNome, self.cpf, self.contatos, self.versao, id))
+        conn.commit()
+        conn.close()
 
-    def delete(self):        
-        if self.id is not None:
-            conn = sqlite3.connect("loja.db")
-            cursor = sqlite3.Cursor()
-            conn.execute("DELETE FROM clientes WHERE id = ?", (self.id,))
-            conn.commit()
-            conn.close()
-            self.id = None
+    def delete(self, id):        
+        conn = sqlite3.connect("loja.db")
+        cursor = conn.cursor()
+        conn.execute("DELETE FROM clientes WHERE id = ?", (id,))
+        conn.commit()
+        conn.close()
 
     @staticmethod
-    def get_all(self):
+    def get_all():
         conn = sqlite3.connect("loja.db")
-        cursor = sqlite3.Cursor()
+        cursor = conn.cursor()
         cursor.execute("SELECT * FROM clientes")
         clientes = cursor.fetchall()
         conn.close()
-        return [Cliente (id=row[0],nome=row[1], primeiroNome=row[2], cpf=row[3], contatos=row[4], dataNascimento=row[5], versao=row[6]) for row in clientes]
+        return [Cliente (nome=row[1], primeiroNome=row[2], cpf=row[3], contatos=row[4], dataNascimento=row[5], versao=row[6]) for row in clientes]
     
     @staticmethod
     def get_by_id(id):
@@ -54,7 +57,7 @@ class Cliente:
         row = cursor.fetchone()
         conn.close
         if row:
-            return Cliente (id=row[0],nome=row[1], primeiroNome=row[2], cpf=row[3], contatos=row[4], dataNascimento=row[5], versao=row[6])
+            return Cliente (nome=row[1], primeiroNome=row[2], cpf=row[3], contatos=row[4], dataNascimento=row[5], versao=row[6])
         return None
     
 def criar_tabelas():
@@ -73,9 +76,22 @@ def criar_tabelas():
     conn.commit()
     conn.close()
 
-criar_tabelas()
+#criar_tabelas()
 
-cliente1 = Cliente ( nome = 'Andrea Silvestre', primeiroNome = 'Andrea', cpf = '01234566789', contatos = 'Marisa', dataNascimento = '1980-10-12', versao = 5)
+cliente1 = Cliente ( nome = 'Pedro Augusto', primeiroNome = 'Pedro', cpf = '01234566789', contatos = 'Mãe', dataNascimento = "2010-10-12", versao = 5)
 cliente1.save()
-cliente2 = Cliente( "Tiago Silva", "Tiago", "0123456202316", "Pedro", "1990-11-05", 1)
+cliente2 = Cliente( "Maria Silva", "Maria", "0123456202316", "Marisa", "1990-11-05", 1)
 cliente2.save()
+
+cliente1.update(19)
+cliente1.delete(3)
+
+# Listar todos os clientes
+print('Clientes:')
+clientes = Cliente.get_all()
+#for cliente in clientes: - funciona assim também
+for cliente in Cliente.get_all():
+    print(f'Nome: {cliente.nome}, Data Nascimento: {cliente.dataNascimento}')
+
+cliente = Cliente.get_by_id(19)
+print (f'\nNome: {cliente.nome}, Data de Nascimento:{cliente.dataNascimento}')
