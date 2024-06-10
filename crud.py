@@ -6,7 +6,7 @@ def criar_tabelas():
     conn = sqlite3.connect(ROOT_PATH / "loja.db")
     cursor = conn.cursor()
 
-    #cursor.execute("DROP TABLE sexo")
+    #cursor.execute("DROP TABLE clientes")
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS sexo
@@ -16,7 +16,7 @@ def criar_tabelas():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS clientes(
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        id_sexo TEXT,
+        id_sexo INTEGER,
         nome TEXT NOT NULL,
         primeiroNome TEXT NOT NULL, 
         cpf TEXT NOT NULL, 
@@ -51,6 +51,42 @@ def criar_tabelas():
             FOREIGN KEY (id_cliente) REFERENCES clientes(id)
             )
         ''')
+    
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS categorias(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            versao INTEGER,
+            nome TEXT)
+        ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS produtos(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dataCriacao DATETIME,
+            dataUltimaAtualizacao DATETIME,
+            nome TEXT NOT NULL, 
+            descricao TEXT, 
+            preco BIGDECIMAL,
+            foto BYTE, 
+            ativo BOOLEAN, 
+            tags TEXT, 
+            versao INTEGER, 
+            id_categoria INTEGER,
+            CONSTRAINT fk_idCategoria 
+            FOREIGN KEY (id_categoria) REFERENCES categorias(id)   
+                   )
+                   ''')
+    
+    # # Obter informações sobre a estrutura da tabela
+    # cursor.execute("PRAGMA table_info(clientes)")
+    # colunas = cursor.fetchall()
+    # # Exibir as informações das colunas
+    # for coluna in colunas:
+    #     cid, nome, tipo, notnull, dflt_value, pk = coluna
+    #     print(f"Nome da Coluna: {nome}, Tipo: {tipo}")
+
+
     conn.commit()
     conn.close()
 
@@ -66,21 +102,39 @@ def save_sexo(descricao):
     except Exception as e:
         print(e)
 
+def save_categoria(versao, nome):
+    ROOT_PATH = Path(__file__).parent
+    conn = sqlite3.connect(ROOT_PATH / "loja.db")
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO categorias (versao, nome) VALUES(?,?)', (versao, nome))
+        #cursor.execute("UPDATE categorias SET nome = ? WHERE id=?", (nome, id))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(e)
+
 
 # **************** TELA USUÁRIO INICIAL ***************************
 
 from Cliente import Cliente
 from Endereco import Endereco
+from Produto import Produto
 
 #criar_tabelas()
 
 # save_sexo("M")
 # save_sexo("F")
+#save_categoria(12, "Calcinha", 8)
+# save_categoria(10, "Camiseta")
+# save_categoria(5, "Cueca")
+# save_categoria(4, "Moleton")
 
-cliente1 = Cliente ( nome = 'Vitoria', primeiroNome = 'Pedro', cpf = '01234566789', contatos = 'Mãe', dataNascimento = "2010-10-12", versao = 5, id_sexo = 1)
-cliente1.save()
-cliente2 = Cliente( "Amanda", "Maria", "0123456202316", "Marisa", "1990-11-05", 1, 2)
-cliente2.save()
+
+# cliente1 = Cliente ( nome = 'Vitoria', primeiroNome = 'Pedro', cpf = '01234566789', contatos = 'Mãe', dataNascimento = "2010-10-12", versao = 5, id_sexo = 1)
+# cliente1.save()
+# cliente2 = Cliente( "Amanda", "Maria", "0123456202316", "Marisa", "1990-11-05", 1, 2)
+# cliente2.save()
 
 # endereco1 = Endereco(2, "37950-000", "Rua Pedro José", "230", "apto 2", "Verona", "Paraiso", "MG")
 # endereco1.save()
@@ -92,6 +146,11 @@ cliente2.save()
 
 #endereco1.update(1)
 #endereco1.delete(1)
+
+produto1 = Produto(dataCriacao="2024-05-25", dataUltimaAtualizacao="2024-06-30", nome="Saia", descricao="Saia rosa bordada", preco=23.20, foto=2, ativo=False, tags="saia, rosa, bordada", versao=5, id_categoria=3)
+# produto1.save()
+#produto1.update(2)
+#produto1.delete(3)
 
 
 # # Listar todos os clientes
@@ -113,3 +172,13 @@ cliente2.save()
 # print ("Único Endereço:")
 # endereco = Endereco.get_by_id(2)
 # print(f"{endereco.id_cliente} {endereco.logradouro} {endereco.numero} {endereco.complemento} {endereco.bairro} {endereco.cidade} {endereco.estado} {endereco.CEP}")
+
+#Listar todos os produtos:
+print ("Produtos:")
+produtos = Produto.get_all()
+for produto in produtos:
+    print(f"{produto.dataCriacao}, {produto.dataUltimaAtualizacao}, {produto.nome}, {produto.descricao}, {produto.preco}, {produto.foto}, {produto.ativo}, {produto.tags}, {produto.versao}, {produto.id_categoria}")
+
+print ("Único Produto:")
+produto = Produto.get_by_id(2)
+print(f"\n{produto.dataCriacao}, {produto.dataUltimaAtualizacao}, {produto.nome}, {produto.descricao}, {produto.preco}, {produto.foto}, {produto.ativo}, {produto.tags}, {produto.versao}, {produto.id_categoria}")
